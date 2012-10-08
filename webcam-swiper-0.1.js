@@ -1,8 +1,10 @@
 /*global console */
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || undefined;
-
+var timer;
 function initializeWebcamSwiper() {
+	timer = new Date().getTime();
+	var loops=0;
 	if (navigator.getUserMedia === undefined) {
 		if (console !== undefined) {
 			console.log("Browser doesn't support getUserMedia");
@@ -57,6 +59,7 @@ function initializeWebcamSwiper() {
 
 			// every ?th of a second, sample the video stream
 			window.webcamSwiperInterval = setInterval(analyzeCurrentFrame, 1000/28);
+			
 
 			function analyzeCurrentFrame() {
 				// Start the timer
@@ -134,6 +137,20 @@ function initializeWebcamSwiper() {
 				// Stop the timer
 				var endTime = new Date().getTime();
 				frameAnalysisTime = endTime - startTime;
+				loops++;
+				if (loops%100 === 0) {
+					console.log(loops);
+				}
+				//console.log(loops);
+				if (loops>300){
+					var ender = new Date().getTime();
+					timer = ender - timer;
+					console.log("10000 loops took: ",timer," ms");
+					console.log("time per loop:", timer/loops)
+					window.destroyWebcamSwiper();
+					console.log("stopped");
+				}
+
 			}
 
 			function fireSwipeEvent(eventName) {
@@ -155,7 +172,13 @@ function initializeWebcamSwiper() {
 					}
 					i -= 4;
 				}
-				
+				// var i = 0;
+				// while (i < dataLength){
+				// 	if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
+				// 		motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
+				// 	}
+				// i += 4;
+				// }
 				return motionWeight;
 			}
 
