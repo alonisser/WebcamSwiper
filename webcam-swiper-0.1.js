@@ -2,6 +2,10 @@
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || undefined;
 var timer;
+var testing = false;
+if (toastr.error){ // if using toaster https://github.com/CodeSeven/toastr change alert to toaster.error
+	alert = toastr.error;
+}
 function initializeWebcamSwiper() {
 	timer = new Date().getTime();
 	var loops=0;
@@ -63,7 +67,7 @@ function initializeWebcamSwiper() {
 
 			function analyzeCurrentFrame() {
 				// Start the timer
-				var startTime = new Date().getTime();
+				var startTime = new Date().getTime()
 
 				scanCount++;
 
@@ -142,13 +146,17 @@ function initializeWebcamSwiper() {
 					console.log(loops);
 				}
 				//console.log(loops);
-				if (loops>300){
-					var ender = new Date().getTime();
-					timer = ender - timer;
-					console.log("10000 loops took: ",timer," ms");
-					console.log("time per loop:", timer/loops)
-					window.destroyWebcamSwiper();
-					console.log("stopped");
+				if (testing){
+
+
+					if (loops>300){
+						var ender = new Date().getTime();
+						timer = ender - timer;
+						console.log("10000 loops took: ",timer," ms");
+						console.log("time per loop:", timer/loops)
+						window.destroyWebcamSwiper();
+						console.log("stopped");
+					}
 				}
 
 			}
@@ -172,13 +180,7 @@ function initializeWebcamSwiper() {
 					}
 					i -= 4;
 				}
-				// var i = 0;
-				// while (i < dataLength){
-				// 	if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
-				// 		motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
-				// 	}
-				// i += 4;
-				// }
+
 				return motionWeight;
 			}
 
@@ -209,21 +211,9 @@ function initializeWebcamSwiper() {
 				return [lightLevel/dataLength,newImageData];
 			}
 
-			// Will return the average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-			// function getLightLevel (imageData) {
-			// 	var theData = imageData.data;
-			// 	var dataLength = theData.length;
-			// 	var value = 0;
-			// 	var i = 0;
-
-			// 	while (i < dataLength) {
-			// 		value += theData[i];
-			// 		i += 4
-			// 	}
-
-			// 	return value / dataLength;
-			// }
 		});
+	}, function(){ //added in case aquiring video stream doesn't work
+		alert("can't acquire video stream");
 	});
 }
 
