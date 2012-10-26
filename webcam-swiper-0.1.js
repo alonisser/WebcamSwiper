@@ -50,6 +50,7 @@ function initializeWebcamSwiper() {
 			var greyscaleCtx = greyScaleCnvs.getContext("2d");
 			var currentImageData = greyscaleCtx.createImageData(canvasWidth, canvasHeight);
 
+
 			// Initialize some variables we will reference each frame
 			var isActive = false;
 			var remainingFrames = 14;
@@ -63,7 +64,7 @@ function initializeWebcamSwiper() {
 
 			// every ?th of a second, sample the video stream
 			window.webcamSwiperInterval = setInterval(analyzeCurrentFrame, 1000/28);
-			
+
 
 			function analyzeCurrentFrame() {
 				// Start the timer
@@ -146,7 +147,7 @@ function initializeWebcamSwiper() {
 					console.log(loops);
 				}
 				//console.log(loops);
-				if (testing){
+				if (testing){// works only if testing is set to True
 
 
 					if (loops>300){
@@ -175,7 +176,7 @@ function initializeWebcamSwiper() {
 				var i = dataLength-1;
 				while (i >= 0) {
 					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
-						motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2)); 
+						motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
 
 					}
 					i -= 4;
@@ -194,11 +195,11 @@ function initializeWebcamSwiper() {
 				var dataLength = theData.length;
 				var i = dataLength-1;
 				var lightLevel;
-				 
+
 				while ( i >= 0) {
 					// To find the desaturated value, average the brightness of the red, green, and blue values
-					var average = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
-					newData[i] = newData[i+1] = newData[i+2] = average;
+
+					newData[i] = newData[i+1] = newData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
 
 					// Fully opaque
 					newData[i+3] = 255;
