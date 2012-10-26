@@ -188,28 +188,43 @@ function initializeWebcamSwiper() {
 			// Takes and ImageData and returns an equally sized Image Data which is desaturated
 			function deSaturate (imageData) {
 				var theData = imageData.data;
-				var newImageData = greyscaleCtx.createImageData(imageData);
-				var newData = newImageData.data;
+				//var newImageData = greyscaleCtx.createImageData(imageData);
+				//var newData = newImageData.data;
 
 				// Iterate through each pixel, desaturating it
 				var dataLength = theData.length;
 				var i = dataLength-1;
 				var lightLevel;
 
+				// while ( i >= 0) {
+				// 	// To find the desaturated value, average the brightness of the red, green, and blue values
+
+				// 	newData[i] = newData[i+1] = newData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+
+				// 	// Fully opaque
+				// 	newData[i+3] = 255;
+				// 	// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
+				// 	lightLevel += newData[i]; //combining the light level in the samefunction
+				// 	i -= 4;
+
+				// }
+
+
+
 				while ( i >= 0) {
 					// To find the desaturated value, average the brightness of the red, green, and blue values
 
-					newData[i] = newData[i+1] = newData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+					theData[i] = theData[i+1] = theData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
 
 					// Fully opaque
-					newData[i+3] = 255;
+					theData[i+3] = 255;
 					// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-					lightLevel += newData[i]; //combining the light level in the samefunction
+					lightLevel += theData[i]; //combining the light level in the samefunction
 					i -= 4;
 
 				}
 
-				return [lightLevel/dataLength,newImageData];
+				return [lightLevel/dataLength,ImageData];
 			}
 
 		});
