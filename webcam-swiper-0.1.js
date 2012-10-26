@@ -223,8 +223,9 @@ function initializeWebcamSwiper() {
 					i -= 4;
 
 				}
-
-				return [lightLevel/dataLength,ImageData];
+				//greyscaleCtx.putImageData(ImageData,0,0);
+				var r = [lightLevel/dataLength,imageData]
+				return r;
 			}
 
 		});
