@@ -1,4 +1,13 @@
 /*global console */
+(function() {
+  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+  window.requestAnimationFrame = requestAnimationFrame;
+
+  var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame ||
+  							 window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
+  window.cancelAnimationFrame = cancelAnimationFrame;
+})();
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || undefined;
 var timer;
@@ -7,8 +16,10 @@ if (toastr.error){ // if using toaster https://github.com/CodeSeven/toastr chang
 	alert = toastr.error;
 }
 function initializeWebcamSwiper() {
-	timer = new Date().getTime();
-	var loops=0;
+	if (testing) {
+		timer = new Date().getTime();
+		var loops=0;
+	}
 	if (navigator.getUserMedia === undefined) {
 		if (console !== undefined) {
 			console.log("Browser doesn't support getUserMedia");
@@ -142,14 +153,13 @@ function initializeWebcamSwiper() {
 				// Stop the timer
 				var endTime = new Date().getTime();
 				frameAnalysisTime = endTime - startTime;
-				loops++;
-				if (loops%100 === 0) {
-					console.log(loops);
-				}
+
 				//console.log(loops);
 				if (testing){// works only if testing is set to True
-
-
+					loops++;
+					if (loops%100 === 0) {
+						console.log(loops);
+					}
 					if (loops>300){
 						var ender = new Date().getTime();
 						timer = ender - timer;
@@ -176,7 +186,7 @@ function initializeWebcamSwiper() {
 				var i = dataLength-1;
 				while (i >= 0) {
 					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
-						motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
+							motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
 
 					}
 					i -= 4;
@@ -188,29 +198,11 @@ function initializeWebcamSwiper() {
 			// Takes and ImageData and returns an equally sized Image Data which is desaturated
 			function deSaturate (imageData) {
 				var theData = imageData.data;
-				//var newImageData = greyscaleCtx.createImageData(imageData);
-				//var newData = newImageData.data;
 
-				// Iterate through each pixel, desaturating it
 				var dataLength = theData.length;
 				var i = dataLength-1;
 				var lightLevel;
-
-				// while ( i >= 0) {
-				// 	// To find the desaturated value, average the brightness of the red, green, and blue values
-
-				// 	newData[i] = newData[i+1] = newData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
-
-				// 	// Fully opaque
-				// 	newData[i+3] = 255;
-				// 	// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-				// 	lightLevel += newData[i]; //combining the light level in the samefunction
-				// 	i -= 4;
-
-				// }
-
-
-
+				// Iterate through each pixel, desaturating it
 				while ( i >= 0) {
 					// To find the desaturated value, average the brightness of the red, green, and blue values
 
@@ -223,13 +215,13 @@ function initializeWebcamSwiper() {
 					i -= 4;
 
 				}
-				//greyscaleCtx.putImageData(ImageData,0,0);
+				imageData.data = theData;
 				var r = [lightLevel/dataLength,imageData]
 				return r;
 			}
 
 		});
-	}, function(){ //added in case aquiring video stream doesn't work
+	}, function(){ //callback added in case aquiring video stream ("canplay" event) doesn't work
 		alert("can't acquire video stream");
 	});
 }
