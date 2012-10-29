@@ -190,6 +190,12 @@ function initializeWebcamSwiper() {
 
 					}
 					i -= 4;
+					//doubling the same action to reduce the loop number in half
+					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
+							motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
+
+					}
+					i -= 4;
 				}
 
 				return motionWeight;
@@ -199,25 +205,27 @@ function initializeWebcamSwiper() {
 			function deSaturate (imageData) {
 				var theData = imageData.data;
 
-				var dataLength = theData.length;
-				var i = dataLength-1;
+				var i = theData.length - 8;
+
 				var lightLevel;
 				// Iterate through each pixel, desaturating it
+				//in order to make the looping more effiecent we are using a variation on a duff machine
 				while ( i >= 0) {
 					// To find the desaturated value, average the brightness of the red, green, and blue values
 
-					theData[i] = theData[i+1] = theData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+					theData[i] = theData[i + 1] = theData[i +2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+					//doubling the same action to reduce the loop number in half
+					theData[i+4] = theData[i + 5] = theData[i + 6] = (theData[i+4] + theData[i + 5] + theData[i + 6]) / 3;
 
 					// Fully opaque
-					theData[i+3] = 255;
+					theData[i + 3] = theData[i + 7]=255;
 					// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-					lightLevel += theData[i]; //combining the light level in the samefunction
-					i -= 4;
+					lightLevel += theData[i] + theData[i + 4]; //combining the light level in the samefunction
+					i -= 8;
 
 				}
-				imageData.data = theData;
-				var r = [lightLevel/dataLength,imageData]
-				return r;
+
+				return [lightLevel/theData.length,imageData];
 			}
 
 		});
