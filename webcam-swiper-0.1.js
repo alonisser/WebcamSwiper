@@ -69,7 +69,7 @@ function initializeWebcamSwiper() {
 			var FRAME_THRESHOLD = 15000;
 			var originalWeight = 0;
 			var previousImageData;
-			var lightLevel = 0;
+			var theLightLevel = 0;
 			var scanCount = 0;
 			var frameAnalysisTime = 36;
 
@@ -95,12 +95,12 @@ function initializeWebcamSwiper() {
 				// Make adjustments for light level and system speed
 				if (scanCount % 50 === 0) {
 					// Calibrate based on the current light level, if we haven't already
-					lightLevel = deSaturated.pop();
-					if (lightLevel > 0 && lightLevel <= 1) {
+					theLightLevel = deSaturated.pop();
+					if (theLightLevel > 0 && theLightLevel <= 1) {
 						PIXEL_CHANGE_THRESHOLD = 25;
 						FRAME_THRESHOLD = 3000;
 					}
-					else if (lightLevel > 1 && lightLevel < 3) {
+					else if (theLightLevel > 1 && theLightLevel < 3) {
 						PIXEL_CHANGE_THRESHOLD = 28;
 						FRAME_THRESHOLD = 6000;
 					}
@@ -117,6 +117,8 @@ function initializeWebcamSwiper() {
 				}
 
 				// Map the pixels that are changing
+				//console.log(previousImageData);
+				//console.log(currentImageData);
 				var currentWeight = getMotionWeight(previousImageData, currentImageData);
 
 				// If we aren't actively looking for a spike the opposite direction, check if we should start
@@ -138,6 +140,7 @@ function initializeWebcamSwiper() {
 						if (originalWeight > 0) {
 							if (currentWeight < -FRAME_THRESHOLD) {
 								fireSwipeEvent("webcamSwipeRight");
+								console.log("fired right");
 								isActive = false;
 							}
 						}
@@ -145,6 +148,7 @@ function initializeWebcamSwiper() {
 							if (currentWeight > FRAME_THRESHOLD) {
 								fireSwipeEvent("webcamSwipeLeft");
 								isActive = false;
+								console.log("fired left");
 							}
 						}
 					}
@@ -176,6 +180,7 @@ function initializeWebcamSwiper() {
 				var swipeEvent = document.createEvent("UIEvents");
 				swipeEvent.initEvent(eventName, false, false);
 				document.getElementsByTagName("body")[0].dispatchEvent(swipeEvent);
+				console.log("fired event");
 			}
 
 			function getMotionWeight (previous, current) {
@@ -183,13 +188,22 @@ function initializeWebcamSwiper() {
 				var previousData = previous.data;
 				var currentData = current.data;
 				var dataLength = previousData.length;
-				var i = dataLength-1;
+				var i = dataLength-8;
 				while (i >= 0) {
 					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
 							motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
 
 					}
 					i -= 4;
+
+					//unrolling the loop.. sort of a duff machine making this more efficient
+					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
+							motionWeight += (((i / 4) % canvasWidth) == 0 ? ((i-1) / 4 % canvasWidth) : ((i / 4) % canvasWidth)- (canvasWidth / 2));
+
+					}
+					i -= 4;
+
+
 				}
 
 				return motionWeight;
@@ -200,24 +214,27 @@ function initializeWebcamSwiper() {
 				var theData = imageData.data;
 
 				var dataLength = theData.length;
-				var i = dataLength-1;
-				var lightLevel;
+				var i = dataLength - 8;
+				var lightLevel = 0;
 				// Iterate through each pixel, desaturating it
 				while ( i >= 0) {
 					// To find the desaturated value, average the brightness of the red, green, and blue values
 
 					theData[i] = theData[i+1] = theData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+					//unrolling the loop.. sort of a duff machine making this more efficient
+					theData[i+4] = theData[i+5] = theData[i+6] = (theData[i+4] + theData[i + 5] + theData[i + 6]) / 3;
 
 					// Fully opaque
-					theData[i+3] = 255;
+					theData[i+3] = theData[i + 7] = 255;
+
 					// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-					lightLevel += theData[i]; //combining the light level in the samefunction
-					i -= 4;
+					lightLevel += theData[i] += theData[i + 4]; //combining the light level in the samefunction
+
+					i -= 8;
 
 				}
-				imageData.data = theData;
-				var r = [lightLevel/dataLength,imageData]
-				return r;
+
+				return [lightLevel/(dataLength/4),imageData]
 			}
 
 		});
