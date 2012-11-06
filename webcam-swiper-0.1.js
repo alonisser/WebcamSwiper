@@ -68,7 +68,7 @@ function initializeWebcamSwiper() {
 			var PIXEL_CHANGE_THRESHOLD = 30;
 			var FRAME_THRESHOLD = 15000;
 			var originalWeight = 0;
-			var previousImageData;
+
 			var theLightLevel = 0;
 			var scanCount = 0;
 			var frameAnalysisTime = 36;
@@ -83,7 +83,7 @@ function initializeWebcamSwiper() {
 
 				scanCount++;
 
-				previousImageData = currentImageData;
+				var previousImageData = currentImageData;
 
 				// Draw the current video frame onto a canvas so we can desaturate the image
 				greyscaleCtx.drawImage(videoElement, 0, 0, horizontalResolution, verticalResolution, 0, 0, canvasWidth, canvasHeight);
@@ -117,9 +117,8 @@ function initializeWebcamSwiper() {
 				}
 
 				// Map the pixels that are changing
-				//console.log(previousImageData);
-				//console.log(currentImageData);
-				var currentWeight = getMotionWeight(previousImageData, currentImageData);
+
+				var currentWeight = getMotionWeight(previousImageData, currentImageData, PIXEL_CHANGE_THRESHOLD, canvasWidth);
 
 				// If we aren't actively looking for a spike the opposite direction, check if we should start
 				if (!isActive) {
@@ -138,6 +137,7 @@ function initializeWebcamSwiper() {
 					else {
 						remainingFrames--;
 						if (originalWeight > 0) {
+							//taking the mirror effect into consideration, when I move my hand to the right, my hand on the screen moves to the left of the canvas
 							if (currentWeight < -FRAME_THRESHOLD) {
 								fireSwipeEvent("webcamSwipeRight");
 								console.log("fired right");
@@ -176,71 +176,66 @@ function initializeWebcamSwiper() {
 
 			}
 
-			function fireSwipeEvent(eventName) {
-				var swipeEvent = document.createEvent("UIEvents");
-				swipeEvent.initEvent(eventName, false, false);
-				document.getElementsByTagName("body")[0].dispatchEvent(swipeEvent);
-				console.log("fired event");
-			}
-
-			function getMotionWeight (previous, current) {
-				var motionWeight = 0;
-				var previousData = previous.data;
-				var currentData = current.data;
-				var dataLength = previousData.length;
-				var i = dataLength-8;
-				while (i >= 0) {
-					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
-							motionWeight += (((i / 4) % canvasWidth) == 0 ? (((i-4) / 4) % canvasWidth) : ((i / 4) % canvasWidth))- (canvasWidth / 2);
-
-					}
-					i -= 4;
-
-					//unrolling the loop.. sort of a duff machine making this more efficient
-					if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
-							motionWeight += (((i / 4) % canvasWidth) == 0 ? (((i-4) / 4) % canvasWidth) : ((i / 4) % canvasWidth))- (canvasWidth / 2);
-
-					}
-					i -= 4;
-
-
-				}
-
-				return motionWeight;
-			}
-
-			// Takes and ImageData and returns an equally sized Image Data which is desaturated
-			function deSaturate (imageData) {
-				var theData = imageData.data;
-
-				var dataLength = theData.length;
-				var i = dataLength - 8;
-				var lightLevel = 0;
-				// Iterate through each pixel, desaturating it
-				while ( i >= 0) {
-					// To find the desaturated value, average the brightness of the red, green, and blue values
-
-					theData[i] = theData[i+1] = theData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
-					//unrolling the loop.. sort of a duff machine making this more efficient
-					theData[i+4] = theData[i+5] = theData[i+6] = (theData[i+4] + theData[i + 5] + theData[i + 6]) / 3;
-
-					// Fully opaque
-					theData[i+3] = theData[i + 7] = 255;
-
-					// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
-					lightLevel += theData[i] += theData[i + 4]; //combining the light level in the samefunction
-
-					i -= 8;
-
-				}
-
-				return [lightLevel/(dataLength/4),imageData]
-			}
-
 		});
 	}, function(){ //callback added in case aquiring video stream ("canplay" event) doesn't work
 		alert("can't acquire video stream");
 	});
+}
+
+function getMotionWeight (previous, current, pixel_change_threshold, canvasWidth) {
+			// Takes and ImageData and returns it desaturated
+			var PIXEL_CHANGE_THRESHOLD = pixel_change_threshold;
+			var canvasWidth = canvasWidth;
+			var motionWeight = 0;
+			var previousData = previous.data;
+			var currentData = current.data;
+			var dataLength = previousData.length;
+			var i = dataLength-8;
+			while (i >= 0) {
+				if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
+						motionWeight += (((i / 4) % canvasWidth) == 0 ? (((i-4) / 4) % canvasWidth) : ((i / 4) % canvasWidth))- (canvasWidth / 2);
+				}
+				i -= 4;
+				//unrolling the loop.. sort of a duff machine making this more efficient
+				if (Math.abs(previousData[i] - currentData[i]) > PIXEL_CHANGE_THRESHOLD) {
+						motionWeight += (((i / 4) % canvasWidth) == 0 ? (((i-4) / 4) % canvasWidth) : ((i / 4) % canvasWidth))- (canvasWidth / 2);
+				}
+				i -= 4;
+			}
+			return motionWeight;
+		}
+function deSaturate (imageData) {
+		var theData = imageData.data;
+
+		var dataLength = theData.length;
+		var i = dataLength - 8;
+		var lightLevel = 0;
+		// Iterate through each pixel, desaturating it
+		while ( i >= 0) {
+			// To find the desaturated value, average the brightness of the red, green, and blue values
+
+			theData[i] = theData[i+1] = theData[i+2] = (theData[i] + theData[i + 1] + theData[i + 2]) / 3;
+			//unrolling the loop.. sort of a duff machine making this more efficient
+			theData[i+4] = theData[i+5] = theData[i+6] = (theData[i+4] + theData[i + 5] + theData[i + 6]) / 3;
+
+			// Fully opaque
+			theData[i+3] = theData[i + 7] = 255;
+
+			// returning an average intensity of all pixels.  Used for calibrating sensitivity based on room light level.
+			lightLevel += theData[i] += theData[i + 4]; //combining the light level in the samefunction
+
+			i -= 8;
+
+		}
+
+		return [lightLevel/(dataLength/4),imageData]
+}
+
+function fireSwipeEvent(eventName) {
+		var swipeEvent = document.createEvent("UIEvents");
+		swipeEvent.initEvent(eventName, false, false);
+		document.getElementsByTagName("body")[0].dispatchEvent(swipeEvent);
+		//console.log("fired event");
 }
 
 function destroyWebcamSwiper() {
