@@ -9,7 +9,7 @@
   window.cancelAnimationFrame = cancelAnimationFrame;
 })();
 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || undefined;
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia ||undefined;
 var timer;
 var testing = false;
 if (toastr.error){ // if using toaster https://github.com/CodeSeven/toastr change alert to toaster.error
